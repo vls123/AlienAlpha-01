@@ -1,0 +1,6 @@
+arcticdb
+pandas
+ccxt
+fredapi
+yfinance
+python-dotenv
