@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.data.store import StorageEngine
 from src.data.ingest.historical import HistoricalIngestor
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def verify_forex_1m():
@@ -39,7 +39,7 @@ def verify_forex_1m():
 
     # 3. Fetch data
     symbol = 'EURUSD'
-    logger.info(f"Fetching {symbol} from CTrader...")
+    logger.info(f"Fetching {symbol} from CTrader (Real API)...")
     try:
         # Last 1 day
         end_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

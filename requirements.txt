@@ -5,3 +5,4 @@ fredapi
 yfinance
 python-dotenv
 ctrader-open-api
+service_identity

@@ -91,11 +91,7 @@ class HistoricalIngestor:
         """
         Fetches historical data from CTrader Open API.
         """
-        try:
-            from src.data.ingest.ctrader import CTraderClient
-        except ImportError:
-            # Fallback if module issue
-            return pd.DataFrame()
+        from src.data.ingest.ctrader import CTraderClient
 
         import os
         client_id = os.getenv("CTRADER_APP_CLIENT_ID") or os.getenv("CTRADER_CLIENT_ID")
