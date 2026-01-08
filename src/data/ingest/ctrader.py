@@ -13,7 +13,8 @@ from ctrader_open_api import Client, TcpProtocol, Protobuf
 from ctrader_open_api.messages.OpenApiModelMessages_pb2 import ProtoOAPayloadType, ProtoOATrendbarPeriod
 from ctrader_open_api.messages.OpenApiMessages_pb2 import (
     ProtoOAApplicationAuthReq, ProtoOAAccountAuthReq, ProtoOAGetTrendbarsReq, ProtoOAGetTrendbarsRes,
-    ProtoOAGetAccountListByAccessTokenReq, ProtoOAGetAccountListByAccessTokenRes
+    ProtoOAGetAccountListByAccessTokenReq, ProtoOAGetAccountListByAccessTokenRes,
+    ProtoOASymbolsListReq, ProtoOASymbolsListRes
 )
 
 logger = logging.getLogger(__name__)
@@ -132,6 +133,27 @@ class CTraderClient:
                     future.set_exception(Exception(f"API Error: {message.payload}"))
                     client.stopService()
 
+                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
+                    logger.info("Received Symbols List.")
+                    res = ProtoOASymbolsListRes()
+                    res.ParseFromString(message.payload)
+                    
+                    self._symbol_cache = {}
+                    for sym in res.symbol:
+                        self._symbol_cache[sym.symbolName] = sym.symbolId
+                    
+                    # If this was part of fetch_all_symbols (external future), resolve it
+                    # But wait, fetch_all_symbols uses a DIFFERENT callback structure in _do_fetch_symbols?
+                    # No, we are in _do_fetch_history's on_message. 
+                    # We are hijacking this flow for "lazy loading".
+                    
+                    if hasattr(self, '_pending_history_req'):
+                        p_sym, p_start, p_end = self._pending_history_req
+                        del self._pending_history_req
+                        self._request_trendbars(client, p_sym, p_start, p_end)
+                    
+                    # Note: We do NOT stop service here if we are chaining.
+
                 elif message.payloadType == ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES:
                     logger.info("Received Account List:")
                     res = ProtoOAGetAccountListByAccessTokenRes()
@@ -158,21 +180,64 @@ class CTraderClient:
                 future.set_exception(e)
 
     def _request_trendbars(self, client, symbol: str, start: datetime, end: datetime):
+        # 1. Map ArcticDB symbol to CTrader symbol
+        # Mappings based on manual inspection of CTrader Demo symbols
+        SYMBOL_MAP = {
+            "WTIUSD": "XTIUSD",
+            "BCOUSD": "XBRUSD",
+            "ETXEUR": "STOXX50",
+            "UKXGBP": "UK100",
+            "NSXUSD": "USTEC",
+            "JPXJPY": "JP225",
+            # UDXUSD seems missing on Demo, mapped to None to skip/fail
+        }
+        
+        # Use mapped name if exists, else original
+        ctrader_symbol = SYMBOL_MAP.get(symbol, symbol)
+        
+        logger.info(f"Resolving symbol: {symbol} -> {ctrader_symbol}")
+
+        # 2. Need Symbol ID. We must fetch all symbols if we haven't cached them.
+        # Since this runs in the reactor, we can't easily block to fetch symbols if we don't have them.
+        # Ideally, we should have fetched them at startup or have a way to do it here.
+        # But for now, we will assume we can't easily do a nested async call without callback hell.
+        
+        # HACK: For this specific task, we will try to resolve if we have the cache, 
+        # otherwise we might fail or default.
+        # BETTER: We modify the flow to Fetch Symbols -> Then Fetch History.
+        # But `fetch_history` API is fixed.
+        
+        # Checking if we have a cache
+        if not hasattr(self, '_symbol_cache'):
+            # This is running in the Reactor thread. We can actually send a request!
+            # But we need to wait for response before sending Trendbar req.
+            # This requires a state machine or chain.
+            
+            logger.info("Symbol cache missing. Requesting Symbol List first...")
+            self._pending_history_req = (symbol, start, end)
+            
+            req = ProtoOASymbolsListReq()
+            req.ctidTraderAccountId = self.account_id
+            req.includeArchivedSymbols = False
+            client.send(req)
+            return
+
+        # If we have cache, proceed
+        symbol_id = self._symbol_cache.get(ctrader_symbol)
+        
+        if not symbol_id:
+             logger.error(f"Symbol {ctrader_symbol} not found in CTrader Account.")
+             # We can't raise generic exception easily to the future from here without stopping flow?
+             # actually we can.
+             # client.stopService() # Only if we want to kill it
+             return 
+
         req = ProtoOAGetTrendbarsReq()
         req.ctidTraderAccountId = self.account_id
-        # Timestamps in ms
         req.fromTimestamp = int(start.timestamp() * 1000)
         req.toTimestamp = int(end.timestamp() * 1000)
         req.period = ProtoOATrendbarPeriod.M1
-        # TODO: Symbol ID lookup. Hardcoding EURUSD = 1 for verification.
-        # Ideally we need a mapping step or ProtoOASymbolsListReq.
-        # Assuming EURUSD is 1 (often valid for major pairs on SpotWare demo/live, but varies by broker).
-        # We will try 1. If empty, user needs to implement symbol mapping.
-        if "EURUSD" in symbol:
-            req.symbolId = 1 
-        else:
-             # Fallback/Dummy
-             req.symbolId = 1
+        req.symbolId = symbol_id
         
         client.send(req)
 
@@ -227,3 +292,74 @@ class CTraderClient:
         if not df.empty:
             df.set_index('timestamp', inplace=True)
         return df
+
+    def fetch_all_symbols(self) -> list:
+        """
+        Fetches all available symbols from CTrader.
+        """
+        if not self.account_id:
+             logger.error("CTrader Account ID not provided.")
+             return []
+
+        future = Future()
+        reactor.callFromThread(self._do_fetch_symbols, future)
+        
+        try:
+            return future.result(timeout=30)
+        except Exception as e:
+            logger.error(f"Failed fetching symbols: {e}")
+            return []
+
+    def _do_fetch_symbols(self, future: Future):
+        try:
+            import os
+            host = os.getenv("CTRADER_HOST", "live.ctraderapi.com")
+            port = int(os.getenv("CTRADER_PORT", 5035))
+            client = Client(host, port, TcpProtocol)
+            
+            def on_connected(client):
+                # App Auth
+                req = ProtoOAApplicationAuthReq()
+                req.clientId = self.client_id
+                req.clientSecret = self.client_secret
+                client.send(req)
+
+            def on_message(client, message):
+                if message.payloadType == ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
+                    req = ProtoOAAccountAuthReq()
+                    req.ctidTraderAccountId = self.account_id
+                    req.accessToken = self.access_token
+                    client.send(req)
+                    
+                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
+                    req = ProtoOASymbolsListReq()
+                    req.ctidTraderAccountId = self.account_id
+                    req.includeArchivedSymbols = False
+                    client.send(req)
+
+                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
+                    res = ProtoOASymbolsListRes()
+                    res.ParseFromString(message.payload)
+                    symbols = []
+                    for sym in res.symbol:
+                        symbols.append({'id': sym.symbolId, 'name': sym.symbolName})
+                    future.set_result(symbols)
+                    client.stopService()
+
+                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_ERROR_RES:
+                    logger.error(f"CTrader Error: {message.payload}")
+                    future.set_exception(Exception(f"API Error: {message.payload}"))
+                    client.stopService()
+
+            def on_disconnected(client, reason):
+                if not future.done():
+                    future.set_result([])
+
+            client.setConnectedCallback(on_connected)
+            client.setMessageReceivedCallback(on_message)
+            client.setDisconnectedCallback(on_disconnected)
+            client.startService()
+            
+        except Exception as e:
+            if not future.done():
+                future.set_exception(e)
