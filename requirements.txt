@@ -4,3 +4,4 @@ ccxt
 fredapi
 yfinance
 python-dotenv
+ctrader-open-api

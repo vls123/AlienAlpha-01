@@ -86,3 +86,32 @@ class HistoricalIngestor:
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         df.set_index('timestamp', inplace=True)
         return ensure_utc_index(df)
+
+    def fetch_ctrader(self, symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
+        """
+        Fetches historical data from CTrader Open API.
+        """
+        try:
+            from src.data.ingest.ctrader import CTraderClient
+        except ImportError:
+            # Fallback if module issue
+            return pd.DataFrame()
+
+        import os
+        client_id = os.getenv("CTRADER_APP_CLIENT_ID") or os.getenv("CTRADER_CLIENT_ID")
+        client_secret = os.getenv("CTRADER_APP_CLIENT_SECRET") or os.getenv("CTRADER_CLIENT_SECRET")
+        access_token = os.getenv("CTRADER_ACCESS_TOKEN")
+        account_id = os.getenv("CTRADER_ACCOUNT_ID")
+        
+        # Instantiate client (Mock/Synthetic for now)
+        client = CTraderClient(client_id, client_secret, access_token, account_id)
+        
+        # Parse dates
+        start = pd.Timestamp(start_date).to_pydatetime()
+        end = pd.Timestamp(end_date).to_pydatetime()
+        
+        df = client.fetch_history(symbol, start, end)
+        
+        # Ensure UTC timezone
+        df = ensure_utc_index(df)
+        return df
