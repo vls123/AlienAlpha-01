@@ -99,7 +99,7 @@ class HistoricalIngestor:
         access_token = os.getenv("CTRADER_ACCESS_TOKEN")
         account_id = os.getenv("CTRADER_ACCOUNT_ID")
         
-        # Instantiate client (Mock/Synthetic for now)
+        # Instantiate client
         client = CTraderClient(client_id, client_secret, access_token, account_id)
         
         # Parse dates

@@ -1,16 +1,61 @@
 version: '3.8'
+
 services:
+  # -------------------------------------------------------------------------
+  # Redis Stack: State Store & Messaging
+  # -------------------------------------------------------------------------
   redis:
     image: redis/redis-stack:latest
-    container_name: alien_alpha_redis
+    container_name: alien_redis
     ports:
-      - "6379:6379"
-      - "8001:8001"
+      - "6379:6379" # Redis Port
+      - "8001:8001" # RedisInsight UI
     volumes:
-      - redis_data:/data
+      - ./data/redis:/data
     restart: always
     environment:
       - REDIS_ARGS="--appendonly yes"
 
-volumes:
-  redis_data:
+  # -------------------------------------------------------------------------
+  # Ingestor: CTrader -> Redis
+  # -------------------------------------------------------------------------
+  ingestor:
+    build: .
+    container_name: alien_ingestor
+    depends_on:
+      - redis
+    # Mount source for development (optional, remove for pure prod)
+    volumes:
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+      - ./.env:/app/.env
+    # Environment variables from .env file
+    env_file:
+      - .env
+    # Override command to run the live forex script
+    command: [ "python", "-m", "src.data.ingest.live_forex" ]
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # -------------------------------------------------------------------------
+  # Dashboard: System Monitor
+  # -------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: .
+      dockerfile: src/dashboard/Dockerfile
+    container_name: alien_dashboard
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=alien_redis
+      - REDIS_PORT=6379
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./src/data/arctic_data:/data/arctic_data
+    depends_on:
+      - redis
+    restart: always

@@ -14,7 +14,8 @@ from ctrader_open_api.messages.OpenApiModelMessages_pb2 import ProtoOAPayloadTyp
 from ctrader_open_api.messages.OpenApiMessages_pb2 import (
     ProtoOAApplicationAuthReq, ProtoOAAccountAuthReq, ProtoOAGetTrendbarsReq, ProtoOAGetTrendbarsRes,
     ProtoOAGetAccountListByAccessTokenReq, ProtoOAGetAccountListByAccessTokenRes,
-    ProtoOASymbolsListReq, ProtoOASymbolsListRes
+    ProtoOASymbolsListReq, ProtoOASymbolsListRes,
+    ProtoOASubscribeSpotsReq, ProtoOASubscribeSpotsRes, ProtoOASpotEvent
 )
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,23 @@ class CTraderClient:
         
         self._reactor_thread = None
         self._client = None
+        self._connected_future = Future()
+        self._pending_future = None
+        self._pending_context = None 
+        self._spot_callback = None
+        
         self._start_reactor()
+
+    def set_spot_callback(self, callback):
+        """Sets a callback function(symbol_id, bid, ask) for live spots."""
+        self._spot_callback = callback
+
+    def subscribe(self, symbols: list):
+        """Subscribes to live spots for the given list of symbols (names)."""
+        if not self._client:
+            self.connect()
+        
+        reactor.callFromThread(self._send_subscribe_req, symbols)
 
     def _start_reactor(self):
         """Starts the Twisted reactor in a separate thread if not running."""
@@ -46,142 +63,215 @@ class CTraderClient:
         else:
              print("DEBUG: Reactor already running.")
 
-    def fetch_history(self, symbol: str, start: datetime, end: datetime, interval='m1') -> pd.DataFrame:
-        """
-        Synchronous wrapper to fetch history via Twisted.
-        Blocks until data is returned.
-        """
-        print(f"DEBUG: fetch_history called for {symbol}")
-        if not self.account_id:
-            logger.error("CTrader Account ID not provided.")
-            return pd.DataFrame()
+    def connect(self):
+        """Connects and Authenticates. Blocks until success."""
+        if self._client: 
+            return # Already connected
 
-        # Future to bridge threads
+        logger.info("Connecting to CTrader...")
         future = Future()
-        
-        # Dispatch to Twisted thread
-        print("DEBUG: Scheduling _do_fetch_history on reactor...")
-        reactor.callFromThread(self._do_fetch_history, symbol, start, end, future)
-        
+        reactor.callFromThread(self._do_connect, future)
         try:
-            # Block waiting for result
-            res = future.result(timeout=30)
-            print(f"DEBUG: Future returned with {type(res)}")
-            return res
+            future.result(timeout=10)
+            self._connected_future.set_result(True)
         except Exception as e:
-            logger.error(f"Timed out or failed fetching history: {e}")
-            return pd.DataFrame()
+            logger.error(f"Connection failed: {e}")
+            raise
 
-    def _do_fetch_history(self, symbol: str, start: datetime, end: datetime, future: Future):
-        """
-        Runs inside the Twisted Reactor thread.
-        """
-        print("DEBUG: _do_fetch_history running in thread.")
+    def disconnect(self):
+        if self._client:
+            reactor.callFromThread(self._client.stopService)
+
+    def _do_connect(self, future: Future):
         try:
-            # Setup Client
             import os
             host = os.getenv("CTRADER_HOST", "live.ctraderapi.com")
             port = int(os.getenv("CTRADER_PORT", 5035))
-            logger.info(f"Connecting to {host}:{port}...")
-            client = Client(host, port, TcpProtocol)
+            self._client = Client(host, port, TcpProtocol)
+            client = self._client
             
             def on_connected(client):
-                logger.info("Connected to CTrader API.")
-                # App Auth
+                logger.debug("Connected. Sending App Auth...")
                 req = ProtoOAApplicationAuthReq()
                 req.clientId = self.client_id
                 req.clientSecret = self.client_secret
-                logger.debug(f"Sending App Auth: {req}")
                 client.send(req)
 
-            def on_message(client, message):
-                logger.debug(f"Received Message: {message.payloadType}")
-                # Handle Auth Responses
-                if message.payloadType == ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
-                    logger.info("App Auth Success. Sending Account Auth...")
-                    req = ProtoOAAccountAuthReq()
-                    req.ctidTraderAccountId = self.account_id
-                    req.accessToken = self.access_token
-                    logger.debug(f"Sending Account Auth for {self.account_id}")
-                    client.send(req)
-                    
-                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
-                    logger.info("Account Auth Success. Requesting Trendbars...")
-                    self._request_trendbars(client, symbol, start, end)
-
-                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
-                    logger.info("Received Trendbars.")
-                    res = ProtoOAGetTrendbarsRes()
-                    res.ParseFromString(message.payload)
-                    df = self._parse_trendbars(res)
-                    # logger.info(f"Unpacked {len(df)} bars")
-                    future.set_result(df)
-                    client.stopService() # Disconnect after done
-
-                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_ERROR_RES:
-                    logger.error(f"CTrader Error: {message.payload}")
-                    
-                    # If Account Not Found, try to list available accounts
-                    if b"CH_CTID_TRADER_ACCOUNT_NOT_FOUND" in message.payload:
-                        logger.info("Attempting to list available accounts for this token...")
-                        req = ProtoOAGetAccountListByAccessTokenReq()
-                        req.accessToken = self.access_token
-                        client.send(req)
-                        # Don't fail yet, wait for list response
-                        return
-
-                    future.set_exception(Exception(f"API Error: {message.payload}"))
-                    client.stopService()
-
-                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
-                    logger.info("Received Symbols List.")
-                    res = ProtoOASymbolsListRes()
-                    res.ParseFromString(message.payload)
-                    
-                    self._symbol_cache = {}
-                    for sym in res.symbol:
-                        self._symbol_cache[sym.symbolName] = sym.symbolId
-                    
-                    # If this was part of fetch_all_symbols (external future), resolve it
-                    # But wait, fetch_all_symbols uses a DIFFERENT callback structure in _do_fetch_symbols?
-                    # No, we are in _do_fetch_history's on_message. 
-                    # We are hijacking this flow for "lazy loading".
-                    
-                    if hasattr(self, '_pending_history_req'):
-                        p_sym, p_start, p_end = self._pending_history_req
-                        del self._pending_history_req
-                        self._request_trendbars(client, p_sym, p_start, p_end)
-                    
-                    # Note: We do NOT stop service here if we are chaining.
-
-                elif message.payloadType == ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES:
-                    logger.info("Received Account List:")
-                    res = ProtoOAGetAccountListByAccessTokenRes()
-                    res.ParseFromString(message.payload)
-                    for acct in res.ctidTraderAccount:
-                        logger.info(f" - Account ID: {acct.ctidTraderAccountId} (Live: {acct.isLive})")
-                    
-                    future.set_exception(Exception("Authentication failed. Check logs for valid Account IDs."))
-                    client.stopService()
-
-            def on_disconnected(client, reason):
-                logger.info(f"Disconnected: {reason}")
-                if not future.done():
-                    future.set_result(pd.DataFrame()) # Return empty on disconnect to avoid blocking forever
-
             client.setConnectedCallback(on_connected)
-            client.setMessageReceivedCallback(on_message)
-            client.setDisconnectedCallback(on_disconnected)
+            client.setMessageReceivedCallback(self._on_message)
+            client.setDisconnectedCallback(self._on_disconnected)
             
-            client.startService()
-            
+            self._connect_future = future
+            self._client.startService()
         except Exception as e:
-            if not future.done():
-                future.set_exception(e)
+            future.set_exception(e)
 
-    def _request_trendbars(self, client, symbol: str, start: datetime, end: datetime):
+    def _on_message(self, client, message):
+        # Auth Handling
+        if message.payloadType == ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
+            req = ProtoOAAccountAuthReq()
+            req.ctidTraderAccountId = self.account_id
+            req.accessToken = self.access_token
+            client.send(req)
+            
+        elif message.payloadType == ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
+            logger.info("CTrader Auth Success.")
+            if hasattr(self, '_connect_future') and not self._connect_future.done():
+                self._connect_future.set_result(True)
+                
+    def _send_subscribe_req(self, symbols: list):
+        # Resolve all symbols to IDs
+        if not hasattr(self, '_symbol_cache'):
+            logger.info("Symbol cache missing. Requesting Symbol List first...")
+            self._pending_context = ("SUBSCRIBE", symbols)
+            req = ProtoOASymbolsListReq()
+            req.ctidTraderAccountId = self.account_id
+            req.includeArchivedSymbols = False
+            self._client.send(req)
+            return
+
+        symbol_ids = []
+        # Mapping logic
+        SYMBOL_MAP = {
+            "WTIUSD": "XTIUSD",
+            "BCOUSD": "XBRUSD",
+            "ETXEUR": "STOXX50",
+            "UKXGBP": "UK100",
+            "NSXUSD": "USTEC",
+            "JPXJPY": "JP225",
+        }
+
+        for sym in symbols:
+            ctrader_sym = SYMBOL_MAP.get(sym, sym)
+            sid = self._symbol_cache.get(ctrader_sym)
+            if sid:
+                symbol_ids.append(sid)
+            else:
+                logger.warning(f"Symbol {sym} not found for subscription.")
+        
+        if not symbol_ids:
+            logger.warning("No valid symbols to subscribe.")
+            return
+
+        logger.info(f"Subscribing to {len(symbol_ids)} symbols: {symbols}")
+        req = ProtoOASubscribeSpotsReq()
+        req.ctidTraderAccountId = self.account_id
+        req.symbolId.extend(symbol_ids)
+        self._client.send(req)
+
+    def _on_message(self, client, message):
+        # Auth Handling
+        if message.payloadType == ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
+            req = ProtoOAAccountAuthReq()
+            req.ctidTraderAccountId = self.account_id
+            req.accessToken = self.access_token
+            client.send(req)
+            
+        elif message.payloadType == ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
+            logger.info("CTrader Auth Success.")
+            if hasattr(self, '_connect_future') and not self._connect_future.done():
+                self._connect_future.set_result(True)
+                
+        # Symbol List
+        elif message.payloadType == ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
+            res = ProtoOASymbolsListRes()
+            res.ParseFromString(message.payload)
+            self._symbol_cache = {s.symbolName: s.symbolId for s in res.symbol}
+            
+            if self._pending_context == "SYMBOLS":
+                if self._pending_future: self._pending_future.set_result(self._symbol_cache)
+                self._pending_context = None
+            elif isinstance(self._pending_context, tuple):
+                ctx_type = self._pending_context[0]
+                if ctx_type == "SUBSCRIBE":
+                     self._send_subscribe_req(self._pending_context[1])
+                     self._pending_context = None
+                else:
+                    # History context: (sym, start, end)
+                    # Wait, legacy context was (sym, start, end) tuple size 3
+                    # My new tuple is size 2 for SUBSCRIBE.
+                    # Safety check
+                    if len(self._pending_context) == 3:
+                         sym, s, e = self._pending_context
+                         self._send_trendbar_req(sym, s, e)
+
+        # Helper method to find Symbol Name by ID for callbacks
+        def get_sym_name(sid):
+            if hasattr(self, '_symbol_cache'):
+                # Invert map efficiently? No, just iterate for now or fetch
+                for n, i in self._symbol_cache.items():
+                    if i == sid: return n
+            return str(sid)
+
+        # Spot Events (Live Ticks)
+        if message.payloadType == ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
+            event = ProtoOASpotEvent()
+            event.ParseFromString(message.payload)
+            
+            # Extract bid/ask/timestmap
+            # ProtoOASpotEvent has 'symbolId' and 'bid', 'ask' (deltas or absolute?)
+            # Usually absolute if 'bid' is set? Or delta?
+            # If `bid` is set, it's absolute price (scaled).
+            # If `trendbar` inside spot event? No.
+            
+            # Need to confirm Proto definition. usually:
+            # optional uint64 bid = 2;
+            # optional uint64 ask = 3;
+            # optional int64 symbolId = 1;
+            
+            if event.HasField('bid'):
+                bid = event.bid / 100000.0 # Assuming 5 digits
+                sym_name = get_sym_name(event.symbolId)
+                if self._spot_callback:
+                    self._spot_callback(sym_name, bid, None, datetime.now(timezone.utc))
+
+        # Trendbars
+        elif message.payloadType == ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
+            # logger.info("Received Trendbars.")
+            print(f"[DEBUG] Received Trendbars: {len(message.payload)} bytes")
+            res = ProtoOAGetTrendbarsRes()
+            res.ParseFromString(message.payload)
+            df = self._parse_trendbars(res)
+            if self._pending_future and not self._pending_future.done():
+                self._pending_future.set_result(df)
+            self._pending_context = None
+
+        # Errors
+        elif message.payloadType == ProtoOAPayloadType.PROTO_OA_ERROR_RES:
+            logger.error(f"CTrader Error: {message.payload}")
+            if hasattr(self, '_connect_future') and not self._connect_future.done():
+                 self._connect_future.set_exception(Exception(f"Auth Error: {message.payload}"))
+            
+            if self._pending_future and not self._pending_future.done():
+                 self._pending_future.set_exception(Exception(f"API Error: {message.payload}"))
+
+    def _on_disconnected(self, client, reason):
+        logger.info(f"Disconnected: {reason}")
+        self._client = None
+        if hasattr(self, '_connect_future') and not self._connect_future.done():
+            self._connect_future.set_exception(Exception("Disconnected during connect"))
+        if self._pending_future and not self._pending_future.done():
+            self._pending_future.set_exception(Exception("Disconnected during request"))
+
+    def fetch_history(self, symbol: str, start: datetime, end: datetime, interval='m1') -> pd.DataFrame:
+        if not self._client:
+            self.connect()
+
+        future = Future()
+        self._pending_future = future
+        self._pending_context = (symbol, start, end)
+        
+        reactor.callFromThread(self._send_trendbar_req, symbol, start, end)
+        
+        try:
+            return future.result(timeout=30)
+        except Exception as e:
+            logger.error(f"Fetch failed: {e}")
+            self._pending_future = None
+            return pd.DataFrame()
+
+    def _send_trendbar_req(self, symbol: str, start: datetime, end: datetime):
         # 1. Map ArcticDB symbol to CTrader symbol
-        # Mappings based on manual inspection of CTrader Demo symbols
         SYMBOL_MAP = {
             "WTIUSD": "XTIUSD",
             "BCOUSD": "XBRUSD",
@@ -197,29 +287,17 @@ class CTraderClient:
         
         logger.info(f"Resolving symbol: {symbol} -> {ctrader_symbol}")
 
-        # 2. Need Symbol ID. We must fetch all symbols if we haven't cached them.
-        # Since this runs in the reactor, we can't easily block to fetch symbols if we don't have them.
-        # Ideally, we should have fetched them at startup or have a way to do it here.
-        # But for now, we will assume we can't easily do a nested async call without callback hell.
-        
-        # HACK: For this specific task, we will try to resolve if we have the cache, 
-        # otherwise we might fail or default.
-        # BETTER: We modify the flow to Fetch Symbols -> Then Fetch History.
-        # But `fetch_history` API is fixed.
-        
         # Checking if we have a cache
         if not hasattr(self, '_symbol_cache'):
-            # This is running in the Reactor thread. We can actually send a request!
-            # But we need to wait for response before sending Trendbar req.
-            # This requires a state machine or chain.
-            
             logger.info("Symbol cache missing. Requesting Symbol List first...")
-            self._pending_history_req = (symbol, start, end)
+            # We set the pending context so _on_message handles the callback
+            # But wait, fetch_history sets _pending_context = (sym, start, end).
+            # The _on_message handler for SYMBOLS_LIST uses that context to recall this method.
             
             req = ProtoOASymbolsListReq()
             req.ctidTraderAccountId = self.account_id
             req.includeArchivedSymbols = False
-            client.send(req)
+            self._client.send(req)
             return
 
         # If we have cache, proceed
@@ -227,19 +305,25 @@ class CTraderClient:
         
         if not symbol_id:
              logger.error(f"Symbol {ctrader_symbol} not found in CTrader Account.")
-             # We can't raise generic exception easily to the future from here without stopping flow?
-             # actually we can.
-             # client.stopService() # Only if we want to kill it
+             if self._pending_future: 
+                 logger.info("Setting Empty Result due to missing symbol.")
+                 self._pending_future.set_result(pd.DataFrame())
              return 
 
+        logger.info(f"Requests Trendbars for {ctrader_symbol} (ID: {symbol_id})")
+        
         req = ProtoOAGetTrendbarsReq()
         req.ctidTraderAccountId = self.account_id
         req.fromTimestamp = int(start.timestamp() * 1000)
         req.toTimestamp = int(end.timestamp() * 1000)
         req.period = ProtoOATrendbarPeriod.M1
         req.symbolId = symbol_id
-        
-        client.send(req)
+
+        try:
+             self._client.send(req)
+        except Exception as e:
+             logger.error(f"Send Failed: {e}")
+             if self._pending_future: self._pending_future.set_exception(e)
 
     def _parse_trendbars(self, res) -> pd.DataFrame:
         data = []

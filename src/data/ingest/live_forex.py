@@ -1,33 +1,29 @@
 """
-Live Forex data ingestion via CTrader API.
+Live Forex data ingestion via CTrader API (Real).
 """
 import logging
 import asyncio
+import os
 from datetime import datetime, timezone
-import json
-import random
-try:
-    import redis
-except ImportError:
-    redis = None
+import redis
+from .ctrader import CTraderClient
 
 logger = logging.getLogger(__name__)
 
-import json
-import random
-from datetime import datetime
-import redis
-
 class CTraderConnector:
     """
-    Connects to CTrader Open API for live forex ticks.
-    Currently uses SYNTHETIC data for pipeline verification due to missing Protobuf definitions.
+    Connects to CTrader Open API for live forex ticks using CTraderClient.
     """
     def __init__(self, client_id: str, client_secret: str, redis_host: str = "localhost", redis_port: int = 6379):
         self.client_id = client_id
         self.client_secret = client_secret
-        self.connected = False
-        self.running = False
+        
+        # Load tokens from env if not provided or valid
+        self.access_token = os.getenv("CTRADER_ACCESS_TOKEN")
+        self.account_id = os.getenv("CTRADER_ACCOUNT_ID")
+        
+        self.client = CTraderClient(client_id, client_secret, self.access_token, self.account_id)
+        
         try:
             self._redis = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
             self._redis.ping()
@@ -37,62 +33,77 @@ class CTraderConnector:
             self._redis = None
 
     async def connect(self):
-        """Establishes connection to CTrader (Simulated)."""
-        logger.info("Connecting to CTrader...")
-        # TODO: Implement actual CTrader Protocol logic (Pros/TCP) using client_id/secret
-        await asyncio.sleep(1) # Simulate connection time
-        self.connected = True
-        logger.info("Connected to CTrader (Simulated)")
+        """Establishes connection to CTrader."""
+        # The client runs its own thread, we just ensure it's connected
+        # But Client.connect() is blocking-ish or Future-based
+        # We can call it in executor
+        await asyncio.to_thread(self.client.connect)
 
-    async def subscribe_symbol(self, symbol: str):
-        """Subscribes to live ticks for a symbol."""
-        if not self.connected:
-            logger.warning("Not connected to CTrader")
-            return
-        logger.info(f"Subscribed to {symbol} (Simulated)")
-
-    async def start_ingestion(self, symbols: list):
-        """Main loop for generating and publishing ticks."""
-        if not self.connected:
-            await self.connect()
-        
-        self.running = True
-        logger.info(f"Starting ingestion for {symbols}...")
-        
-        while self.running:
-            for symbol in symbols:
-                # Generate synthetic tick
-                tick = {
-                    "type": "tick",
+    def _on_spot(self, symbol, bid, ask, ts):
+        """Callback from CTrader Thread."""
+        # Push to Redis
+        if self._redis:
+            try:
+                stream_key = f"tick:{symbol}"
+                entry = {
                     "symbol": symbol,
-                    "price": round(random.uniform(1.05, 1.15), 5),
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "volume": random.randint(1000, 5000)
+                    "price": str(bid),
+                    "timestamp": ts.isoformat()
                 }
-                
-                # Publish to Redis Stream
-                if self._redis:
-                    try:
-                        stream_key = f"tick:{symbol}"
-                        # Streams expect dict of strings/bytes. JSON dump not strictly needed for fields if flat, 
-                        # but keeping structure is good. Actually XADD takes a dict map.
-                        # Let's write fields directly.
-                        entry = {
-                            "symbol": tick["symbol"],
-                            "price": str(tick["price"]),
-                            "volume": str(tick["volume"]),
-                            "timestamp": tick["timestamp"]
-                        }
-                        self._redis.xadd(stream_key, entry)
-                        
-                        # also publish to pub/sub for legacy/livestream (optional, but good for "Hybrid")
-                        # self._redis.publish("live_ticks", json.dumps(tick))
-                        
-                    except Exception as e:
-                        logger.error(f"Redis stream add failed: {e}")
-            
-            await asyncio.sleep(1) # 1 tick per second per symbol
+                self._redis.xadd(stream_key, entry)
+                # logger.debug(f"Pushed {symbol} {bid}")
+            except Exception as e:
+                logger.error(f"Redis write failed: {e}")
+
+    async def start_ingestion(self, symbols: list = None):
+        """Main loop."""
+        # Set callback
+        self.client.set_spot_callback(self._on_spot)
+        
+        await self.connect()
+        
+        # Default to Majors if not specified
+        if not symbols:
+            symbols = ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", "USDCAD", "NZDUSD", "USDZAR"]
+
+        logger.info(f"Subscribing to {symbols}...")
+        self.client.subscribe(symbols)
+        
+        # Keep alive loop with Heartbeat
+        while True:
+            if self._redis:
+                try:
+                    # Set heartbeat with 30s expiry
+                    self._redis.set("service:ingestor:heartbeat", datetime.now(timezone.utc).isoformat(), ex=30)
+                except Exception as e:
+                    logger.error(f"Heartbeat failed: {e}")
+            await asyncio.sleep(5)
 
     def stop(self):
-        self.running = False
-        self.connected = False
+        if self.client:
+            self.client.disconnect()
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    # Load Credentials
+    cid = os.getenv("CTRADER_CLIENT_ID")
+    csec = os.getenv("CTRADER_CLIENT_SECRET")
+    
+    # Load Redis Config
+    redis_host = os.getenv("REDIS_HOST", "localhost")
+    redis_port = int(os.getenv("REDIS_PORT", 6379))
+    
+    if not cid or not csec:
+        logger.error("Missing CTRADER_CLIENT_ID or CTRADER_CLIENT_SECRET")
+        exit(1)
+        
+    connector = CTraderConnector(cid, csec, redis_host=redis_host, redis_port=redis_port)
+    
+    # Run
+    try:
+        asyncio.run(connector.start_ingestion())
+    except KeyboardInterrupt:
+        connector.stop()

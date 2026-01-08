@@ -1,0 +1,23 @@
+# Version Control
+.git
+.gitignore
+
+# Environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Data & Storage (CRITICAL to ignore)
+data/
+src/data/arctic_data/
+library/
+backfill.log
+
+# IDE & Config
+.vscode/
+.idea/
+.gemini/
+
+# Artifacts
+*.md

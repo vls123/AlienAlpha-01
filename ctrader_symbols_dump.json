@@ -1,0 +1,1198 @@
+[
+  {
+    "id": 10212,
+    "name": "1000xBONK"
+  },
+  {
+    "id": 10219,
+    "name": "1000xFLOKI"
+  },
+  {
+    "id": 10220,
+    "name": "1000xPEPE"
+  },
+  {
+    "id": 10211,
+    "name": "1000xSHIB"
+  },
+  {
+    "id": 10230,
+    "name": "1INCHUSD"
+  },
+  {
+    "id": 10216,
+    "name": "2ZUSD"
+  },
+  {
+    "id": 10119,
+    "name": "AAVEUSD"
+  },
+  {
+    "id": 10120,
+    "name": "ADAUSD"
+  },
+  {
+    "id": 10118,
+    "name": "AEROUSD"
+  },
+  {
+    "id": 10007,
+    "name": "AEX"
+  },
+  {
+    "id": 10062,
+    "name": "ALGOUSD"
+  },
+  {
+    "id": 10117,
+    "name": "APTUSD"
+  },
+  {
+    "id": 10063,
+    "name": "ARBUSD"
+  },
+  {
+    "id": 10218,
+    "name": "ASTERUSD"
+  },
+  {
+    "id": 10116,
+    "name": "ATOMUSD"
+  },
+  {
+    "id": 18,
+    "name": "AUDCAD"
+  },
+  {
+    "id": 23,
+    "name": "AUDCHF"
+  },
+  {
+    "id": 38,
+    "name": "AUDDKK"
+  },
+  {
+    "id": 11,
+    "name": "AUDJPY"
+  },
+  {
+    "id": 20,
+    "name": "AUDNZD"
+  },
+  {
+    "id": 1001,
+    "name": "AUDSGD"
+  },
+  {
+    "id": 5,
+    "name": "AUDUSD"
+  },
+  {
+    "id": 10000,
+    "name": "AUS200"
+  },
+  {
+    "id": 10064,
+    "name": "AUSD"
+  },
+  {
+    "id": 10121,
+    "name": "AVXUSD"
+  },
+  {
+    "id": 10028,
+    "name": "BCHUSD"
+  },
+  {
+    "id": 10128,
+    "name": "BNBUSD"
+  },
+  {
+    "id": 10115,
+    "name": "BONKUSD"
+  },
+  {
+    "id": 10021,
+    "name": "BRENT"
+  },
+  {
+    "id": 10161,
+    "name": "BRENT_G6"
+  },
+  {
+    "id": 10183,
+    "name": "BRENT_H6"
+  },
+  {
+    "id": 10162,
+    "name": "BRENT_J6"
+  },
+  {
+    "id": 10182,
+    "name": "BRENT_K6"
+  },
+  {
+    "id": 10163,
+    "name": "BRENT_M6"
+  },
+  {
+    "id": 10181,
+    "name": "BRENT_N6"
+  },
+  {
+    "id": 10164,
+    "name": "BRENT_Q6"
+  },
+  {
+    "id": 10180,
+    "name": "BRENT_U6"
+  },
+  {
+    "id": 10165,
+    "name": "BRENT_V6"
+  },
+  {
+    "id": 10179,
+    "name": "BRENT_X6"
+  },
+  {
+    "id": 10166,
+    "name": "BRENT_Z6"
+  },
+  {
+    "id": 10065,
+    "name": "BRETTUSD"
+  },
+  {
+    "id": 10026,
+    "name": "BTCUSD"
+  },
+  {
+    "id": 10033,
+    "name": "CA60"
+  },
+  {
+    "id": 27,
+    "name": "CADCHF"
+  },
+  {
+    "id": 15,
+    "name": "CADJPY"
+  },
+  {
+    "id": 10225,
+    "name": "CAKEUSD"
+  },
+  {
+    "id": 10114,
+    "name": "CFXUSD"
+  },
+  {
+    "id": 13,
+    "name": "CHFJPY"
+  },
+  {
+    "id": 1002,
+    "name": "CHFSGD"
+  },
+  {
+    "id": 10025,
+    "name": "CHINA50"
+  },
+  {
+    "id": 10039,
+    "name": "CHINAH"
+  },
+  {
+    "id": 10217,
+    "name": "COAIUSD"
+  },
+  {
+    "id": 10223,
+    "name": "COMPUSD"
+  },
+  {
+    "id": 10066,
+    "name": "CROUSD"
+  },
+  {
+    "id": 10113,
+    "name": "CRVUSD"
+  },
+  {
+    "id": 10145,
+    "name": "Cocoa_H6"
+  },
+  {
+    "id": 10199,
+    "name": "Cocoa_K6"
+  },
+  {
+    "id": 10146,
+    "name": "Cocoa_N6"
+  },
+  {
+    "id": 10198,
+    "name": "Cocoa_U6"
+  },
+  {
+    "id": 10147,
+    "name": "Cocoa_Z6"
+  },
+  {
+    "id": 10186,
+    "name": "Coffee_H6"
+  },
+  {
+    "id": 10159,
+    "name": "Coffee_K6"
+  },
+  {
+    "id": 10185,
+    "name": "Coffee_N6"
+  },
+  {
+    "id": 10160,
+    "name": "Coffee_U6"
+  },
+  {
+    "id": 10184,
+    "name": "Coffee_Z6"
+  },
+  {
+    "id": 10195,
+    "name": "Corn_H6"
+  },
+  {
+    "id": 10150,
+    "name": "Corn_K6"
+  },
+  {
+    "id": 10194,
+    "name": "Corn_N6"
+  },
+  {
+    "id": 10151,
+    "name": "Corn_U6"
+  },
+  {
+    "id": 10193,
+    "name": "Corn_Z6"
+  },
+  {
+    "id": 10197,
+    "name": "Cotton_H6"
+  },
+  {
+    "id": 10148,
+    "name": "Cotton_K6"
+  },
+  {
+    "id": 10196,
+    "name": "Cotton_N6"
+  },
+  {
+    "id": 10149,
+    "name": "Cotton_Z6"
+  },
+  {
+    "id": 10003,
+    "name": "DE30"
+  },
+  {
+    "id": 10024,
+    "name": "DE30t"
+  },
+  {
+    "id": 10046,
+    "name": "DE40"
+  },
+  {
+    "id": 10224,
+    "name": "DEXEUSD"
+  },
+  {
+    "id": 10122,
+    "name": "DOGEUSD"
+  },
+  {
+    "id": 10129,
+    "name": "DOTUSD"
+  },
+  {
+    "id": 10222,
+    "name": "DYDXUSD"
+  },
+  {
+    "id": 10226,
+    "name": "ENAUSD"
+  },
+  {
+    "id": 10067,
+    "name": "ENSUSD"
+  },
+  {
+    "id": 10009,
+    "name": "ES35"
+  },
+  {
+    "id": 10112,
+    "name": "ETCUSD"
+  },
+  {
+    "id": 10029,
+    "name": "ETHUSD"
+  },
+  {
+    "id": 14,
+    "name": "EURAUD"
+  },
+  {
+    "id": 17,
+    "name": "EURCAD"
+  },
+  {
+    "id": 10,
+    "name": "EURCHF"
+  },
+  {
+    "id": 1024,
+    "name": "EURCZK"
+  },
+  {
+    "id": 1003,
+    "name": "EURDKK"
+  },
+  {
+    "id": 9,
+    "name": "EURGBP"
+  },
+  {
+    "id": 1004,
+    "name": "EURHKD"
+  },
+  {
+    "id": 34,
+    "name": "EURHUF"
+  },
+  {
+    "id": 3,
+    "name": "EURJPY"
+  },
+  {
+    "id": 1022,
+    "name": "EURMXN"
+  },
+  {
+    "id": 33,
+    "name": "EURNOK"
+  },
+  {
+    "id": 26,
+    "name": "EURNZD"
+  },
+  {
+    "id": 1005,
+    "name": "EURPLN"
+  },
+  {
+    "id": 1023,
+    "name": "EURRUB"
+  },
+  {
+    "id": 31,
+    "name": "EURSEK"
+  },
+  {
+    "id": 1006,
+    "name": "EURSGD"
+  },
+  {
+    "id": 1007,
+    "name": "EURTRY"
+  },
+  {
+    "id": 1,
+    "name": "EURUSD"
+  },
+  {
+    "id": 10023,
+    "name": "EURUSDt"
+  },
+  {
+    "id": 1008,
+    "name": "EURZAR"
+  },
+  {
+    "id": 10002,
+    "name": "F40"
+  },
+  {
+    "id": 10068,
+    "name": "FARTCOINUSD"
+  },
+  {
+    "id": 10206,
+    "name": "FETUSD"
+  },
+  {
+    "id": 10111,
+    "name": "FILUSD"
+  },
+  {
+    "id": 10069,
+    "name": "FLOKIUSD"
+  },
+  {
+    "id": 10110,
+    "name": "FLOWUSD"
+  },
+  {
+    "id": 10070,
+    "name": "GALAUSD"
+  },
+  {
+    "id": 16,
+    "name": "GBPAUD"
+  },
+  {
+    "id": 19,
+    "name": "GBPCAD"
+  },
+  {
+    "id": 40,
+    "name": "GBPCHF"
+  },
+  {
+    "id": 1009,
+    "name": "GBPDKK"
+  },
+  {
+    "id": 7,
+    "name": "GBPJPY"
+  },
+  {
+    "id": 37,
+    "name": "GBPNOK"
+  },
+  {
+    "id": 25,
+    "name": "GBPNZD"
+  },
+  {
+    "id": 1010,
+    "name": "GBPSEK"
+  },
+  {
+    "id": 32,
+    "name": "GBPSGD"
+  },
+  {
+    "id": 10031,
+    "name": "GBPTRY"
+  },
+  {
+    "id": 2,
+    "name": "GBPUSD"
+  },
+  {
+    "id": 1021,
+    "name": "GBPZAR"
+  },
+  {
+    "id": 10134,
+    "name": "GCG26"
+  },
+  {
+    "id": 10135,
+    "name": "GCJ26"
+  },
+  {
+    "id": 10052,
+    "name": "GCM25"
+  },
+  {
+    "id": 10136,
+    "name": "GCM26"
+  },
+  {
+    "id": 10053,
+    "name": "GCN25"
+  },
+  {
+    "id": 10054,
+    "name": "GCQ25"
+  },
+  {
+    "id": 10137,
+    "name": "GCQ26"
+  },
+  {
+    "id": 10055,
+    "name": "GCU25"
+  },
+  {
+    "id": 10056,
+    "name": "GCV25"
+  },
+  {
+    "id": 10057,
+    "name": "GCX25"
+  },
+  {
+    "id": 10058,
+    "name": "GCZ25"
+  },
+  {
+    "id": 10138,
+    "name": "GCZ26"
+  },
+  {
+    "id": 10123,
+    "name": "GLMUSD"
+  },
+  {
+    "id": 10109,
+    "name": "GRTUSD"
+  },
+  {
+    "id": 10071,
+    "name": "HBARUSD"
+  },
+  {
+    "id": 10004,
+    "name": "HK50"
+  },
+  {
+    "id": 10108,
+    "name": "HYPEUSD"
+  },
+  {
+    "id": 10072,
+    "name": "ICPUSD"
+  },
+  {
+    "id": 10107,
+    "name": "IMXUSD"
+  },
+  {
+    "id": 10051,
+    "name": "IN50"
+  },
+  {
+    "id": 10073,
+    "name": "INJUSD"
+  },
+  {
+    "id": 10106,
+    "name": "IOTAUSD"
+  },
+  {
+    "id": 10074,
+    "name": "IPUSD"
+  },
+  {
+    "id": 10005,
+    "name": "IT40"
+  },
+  {
+    "id": 10006,
+    "name": "JP225"
+  },
+  {
+    "id": 10105,
+    "name": "JTOUSD"
+  },
+  {
+    "id": 10075,
+    "name": "JUPUSD"
+  },
+  {
+    "id": 10204,
+    "name": "KAIAUSD"
+  },
+  {
+    "id": 10124,
+    "name": "KSMUSD"
+  },
+  {
+    "id": 10104,
+    "name": "LDOUSD"
+  },
+  {
+    "id": 10130,
+    "name": "LNKUSD"
+  },
+  {
+    "id": 10030,
+    "name": "LTCUSD"
+  },
+  {
+    "id": 10076,
+    "name": "MANAUSD"
+  },
+  {
+    "id": 10103,
+    "name": "MORPHOUSD"
+  },
+  {
+    "id": 10205,
+    "name": "MUSD"
+  },
+  {
+    "id": 10215,
+    "name": "MYXUSD"
+  },
+  {
+    "id": 10045,
+    "name": "MidDE50"
+  },
+  {
+    "id": 10035,
+    "name": "MidDE60"
+  },
+  {
+    "id": 10077,
+    "name": "NEARUSD"
+  },
+  {
+    "id": 10036,
+    "name": "NETH25"
+  },
+  {
+    "id": 1014,
+    "name": "NOKJPY"
+  },
+  {
+    "id": 1011,
+    "name": "NOKSEK"
+  },
+  {
+    "id": 10040,
+    "name": "NOR25"
+  },
+  {
+    "id": 30,
+    "name": "NZDCAD"
+  },
+  {
+    "id": 39,
+    "name": "NZDCHF"
+  },
+  {
+    "id": 21,
+    "name": "NZDJPY"
+  },
+  {
+    "id": 1025,
+    "name": "NZDSGD"
+  },
+  {
+    "id": 12,
+    "name": "NZDUSD"
+  },
+  {
+    "id": 10189,
+    "name": "OJ_F6"
+  },
+  {
+    "id": 10156,
+    "name": "OJ_H6"
+  },
+  {
+    "id": 10188,
+    "name": "OJ_K6"
+  },
+  {
+    "id": 10157,
+    "name": "OJ_N6"
+  },
+  {
+    "id": 10187,
+    "name": "OJ_U6"
+  },
+  {
+    "id": 10158,
+    "name": "OJ_X6"
+  },
+  {
+    "id": 10102,
+    "name": "ONDOUSD"
+  },
+  {
+    "id": 10078,
+    "name": "OPUSD"
+  },
+  {
+    "id": 10207,
+    "name": "PENDLEUSD"
+  },
+  {
+    "id": 10101,
+    "name": "PENGUUSD"
+  },
+  {
+    "id": 10079,
+    "name": "PEPEUSD"
+  },
+  {
+    "id": 10100,
+    "name": "PIUSD"
+  },
+  {
+    "id": 10131,
+    "name": "POLUSD"
+  },
+  {
+    "id": 10080,
+    "name": "PUMPUSD"
+  },
+  {
+    "id": 10099,
+    "name": "PYTHUSD"
+  },
+  {
+    "id": 10208,
+    "name": "QNTUSD"
+  },
+  {
+    "id": 10081,
+    "name": "RAYUSD"
+  },
+  {
+    "id": 10098,
+    "name": "RENDERUSD"
+  },
+  {
+    "id": 10041,
+    "name": "SA40"
+  },
+  {
+    "id": 10082,
+    "name": "SANDUSD"
+  },
+  {
+    "id": 10042,
+    "name": "SE30"
+  },
+  {
+    "id": 10227,
+    "name": "SEIUSD"
+  },
+  {
+    "id": 1015,
+    "name": "SEKJPY"
+  },
+  {
+    "id": 10038,
+    "name": "SG30"
+  },
+  {
+    "id": 1016,
+    "name": "SGDJPY"
+  },
+  {
+    "id": 10097,
+    "name": "SHIBUSD"
+  },
+  {
+    "id": 10010,
+    "name": "SMI"
+  },
+  {
+    "id": 10132,
+    "name": "SOLUSD"
+  },
+  {
+    "id": 10083,
+    "name": "SPXUSD"
+  },
+  {
+    "id": 10001,
+    "name": "STOXX50"
+  },
+  {
+    "id": 10221,
+    "name": "STRKUSD"
+  },
+  {
+    "id": 10096,
+    "name": "STXUSD"
+  },
+  {
+    "id": 10084,
+    "name": "SUIUSD"
+  },
+  {
+    "id": 10095,
+    "name": "SUSD"
+  },
+  {
+    "id": 10037,
+    "name": "SWI20"
+  },
+  {
+    "id": 10085,
+    "name": "SYRUPUSD"
+  },
+  {
+    "id": 10152,
+    "name": "Sbean_F6"
+  },
+  {
+    "id": 10192,
+    "name": "Sbean_H6"
+  },
+  {
+    "id": 10153,
+    "name": "Sbean_K6"
+  },
+  {
+    "id": 10191,
+    "name": "Sbean_N6"
+  },
+  {
+    "id": 10154,
+    "name": "Sbean_Q6"
+  },
+  {
+    "id": 10190,
+    "name": "Sbean_U6"
+  },
+  {
+    "id": 10155,
+    "name": "Sbean_X6"
+  },
+  {
+    "id": 10202,
+    "name": "Sugar_H6"
+  },
+  {
+    "id": 10201,
+    "name": "Sugar_K6"
+  },
+  {
+    "id": 10144,
+    "name": "Sugar_N6"
+  },
+  {
+    "id": 10200,
+    "name": "Sugar_V6"
+  },
+  {
+    "id": 10094,
+    "name": "TAOUSD"
+  },
+  {
+    "id": 10086,
+    "name": "THETAUSD"
+  },
+  {
+    "id": 10093,
+    "name": "TIAUSD"
+  },
+  {
+    "id": 10087,
+    "name": "TONUSD"
+  },
+  {
+    "id": 10092,
+    "name": "TRUMPUSD"
+  },
+  {
+    "id": 10231,
+    "name": "TRXUSD"
+  },
+  {
+    "id": 10214,
+    "name": "TWTUSD"
+  },
+  {
+    "id": 10034,
+    "name": "TecDE30"
+  },
+  {
+    "id": 10011,
+    "name": "UK100"
+  },
+  {
+    "id": 10044,
+    "name": "UKBrent100"
+  },
+  {
+    "id": 10125,
+    "name": "UNIUSD"
+  },
+  {
+    "id": 10012,
+    "name": "US2000"
+  },
+  {
+    "id": 10015,
+    "name": "US30"
+  },
+  {
+    "id": 10013,
+    "name": "US500"
+  },
+  {
+    "id": 10043,
+    "name": "USCrude100"
+  },
+  {
+    "id": 8,
+    "name": "USDCAD"
+  },
+  {
+    "id": 6,
+    "name": "USDCHF"
+  },
+  {
+    "id": 1020,
+    "name": "USDCNH"
+  },
+  {
+    "id": 10209,
+    "name": "USDCUSD"
+  },
+  {
+    "id": 1018,
+    "name": "USDCZK"
+  },
+  {
+    "id": 36,
+    "name": "USDDKK"
+  },
+  {
+    "id": 1000,
+    "name": "USDHKD"
+  },
+  {
+    "id": 1017,
+    "name": "USDHUF"
+  },
+  {
+    "id": 4,
+    "name": "USDJPY"
+  },
+  {
+    "id": 24,
+    "name": "USDMXN"
+  },
+  {
+    "id": 22,
+    "name": "USDNOK"
+  },
+  {
+    "id": 35,
+    "name": "USDPLN"
+  },
+  {
+    "id": 1019,
+    "name": "USDRUB"
+  },
+  {
+    "id": 29,
+    "name": "USDSEK"
+  },
+  {
+    "id": 28,
+    "name": "USDSGD"
+  },
+  {
+    "id": 1026,
+    "name": "USDTHB"
+  },
+  {
+    "id": 1012,
+    "name": "USDTRY"
+  },
+  {
+    "id": 1013,
+    "name": "USDZAR"
+  },
+  {
+    "id": 10014,
+    "name": "USTEC"
+  },
+  {
+    "id": 10203,
+    "name": "VETUSD"
+  },
+  {
+    "id": 10088,
+    "name": "VIRTUALUSD"
+  },
+  {
+    "id": 10091,
+    "name": "WALUSD"
+  },
+  {
+    "id": 10089,
+    "name": "WIFUSD"
+  },
+  {
+    "id": 10008,
+    "name": "WIG20"
+  },
+  {
+    "id": 10090,
+    "name": "WLDUSD"
+  },
+  {
+    "id": 10213,
+    "name": "WLFIUSD"
+  },
+  {
+    "id": 10022,
+    "name": "WTI"
+  },
+  {
+    "id": 10178,
+    "name": "WTI_F6"
+  },
+  {
+    "id": 10167,
+    "name": "WTI_G6"
+  },
+  {
+    "id": 10177,
+    "name": "WTI_H6"
+  },
+  {
+    "id": 10168,
+    "name": "WTI_J6"
+  },
+  {
+    "id": 10176,
+    "name": "WTI_K6"
+  },
+  {
+    "id": 10169,
+    "name": "WTI_M6"
+  },
+  {
+    "id": 10175,
+    "name": "WTI_N6"
+  },
+  {
+    "id": 10170,
+    "name": "WTI_Q6"
+  },
+  {
+    "id": 10174,
+    "name": "WTI_U6"
+  },
+  {
+    "id": 10171,
+    "name": "WTI_V6"
+  },
+  {
+    "id": 10173,
+    "name": "WTI_X6"
+  },
+  {
+    "id": 10172,
+    "name": "WTI_Z6"
+  },
+  {
+    "id": 10139,
+    "name": "Wheat_H6"
+  },
+  {
+    "id": 10143,
+    "name": "Wheat_K6"
+  },
+  {
+    "id": 10142,
+    "name": "Wheat_N6"
+  },
+  {
+    "id": 10140,
+    "name": "Wheat_U6"
+  },
+  {
+    "id": 10141,
+    "name": "Wheat_Z6"
+  },
+  {
+    "id": 10050,
+    "name": "XAGAUD"
+  },
+  {
+    "id": 44,
+    "name": "XAGEUR"
+  },
+  {
+    "id": 42,
+    "name": "XAGUSD"
+  },
+  {
+    "id": 10032,
+    "name": "XAUAUD"
+  },
+  {
+    "id": 10047,
+    "name": "XAUCHF"
+  },
+  {
+    "id": 43,
+    "name": "XAUEUR"
+  },
+  {
+    "id": 10048,
+    "name": "XAUGBP"
+  },
+  {
+    "id": 10049,
+    "name": "XAUJPY"
+  },
+  {
+    "id": 41,
+    "name": "XAUUSD"
+  },
+  {
+    "id": 10018,
+    "name": "XBRUSD"
+  },
+  {
+    "id": 10133,
+    "name": "XLMUSD"
+  },
+  {
+    "id": 10229,
+    "name": "XMRUSD"
+  },
+  {
+    "id": 10020,
+    "name": "XNGUSD"
+  },
+  {
+    "id": 10016,
+    "name": "XPDUSD"
+  },
+  {
+    "id": 10210,
+    "name": "XPLUSD"
+  },
+  {
+    "id": 10017,
+    "name": "XPTUSD"
+  },
+  {
+    "id": 10126,
+    "name": "XRPUSD"
+  },
+  {
+    "id": 10019,
+    "name": "XTIUSD"
+  },
+  {
+    "id": 10127,
+    "name": "XTZUSD"
+  },
+  {
+    "id": 10228,
+    "name": "ZECUSD"
+  }
+]

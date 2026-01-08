@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+psutil
+docker
+redis
+python-dotenv
+arcticdb
+pandas
